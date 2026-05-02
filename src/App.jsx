@@ -1,12 +1,12 @@
 import "./App.css";
 
-import Portfolio from "./components/portfolio/Portfolio";
+
 import Packages from "./components/packages/Packages";   // NEW
-import Video from "./components/video/Video";
+
 import Testimonials from "./components/testimonials/Testimonials";
 import Instagram from "./components/instagram/Instagram";
-import Blog from "./components/blog/Blog";
-import Footer from "./components/footer/Footer";
+
+import Footer from "./components/footer/footer";
 import Gallery from "./pages/Gallery";
 import Location from "./components/location/Location";
 import Featured from "./components/featured/featured";
