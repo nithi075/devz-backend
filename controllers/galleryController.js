@@ -1,9 +1,9 @@
 const Gallery = require("../models/Gallery");
 
+const cloudinary = require("../config/cloudinary");
+
 const addGallery = async (req, res) => {
   try {
-    console.log(req.body);
-    console.log(req.file);
 
     if (!req.file) {
       return res.status(400).json({
@@ -11,10 +11,22 @@ const addGallery = async (req, res) => {
       });
     }
 
+    // upload to cloudinary
+    const result =
+      await cloudinary.uploader.upload(
+        req.file.path,
+        {
+          folder: "korniza-gallery"
+        }
+      );
+
+    // save DB
     const data = new Gallery({
       title: req.body.title,
       category: req.body.category,
-      imageUrl: `https://korniza-backend.onrender.com/uploads/images/${req.file.filename}`
+
+      // REAL CLOUDINARY URL
+      imageUrl: result.secure_url
     });
 
     await data.save();
@@ -24,8 +36,11 @@ const addGallery = async (req, res) => {
         "Gallery uploaded successfully",
       data
     });
+
   } catch (error) {
+
     console.log(error);
+
     res.status(500).json({
       error: error.message
     });
@@ -34,9 +49,13 @@ const addGallery = async (req, res) => {
 
 const getGallery = async (req, res) => {
   try {
+
     const data = await Gallery.find();
+
     res.json(data);
+
   } catch (error) {
+
     res.status(500).json({
       error: error.message
     });
@@ -45,6 +64,7 @@ const getGallery = async (req, res) => {
 
 const deleteGallery = async (req, res) => {
   try {
+
     await Gallery.findByIdAndDelete(
       req.params.id
     );
@@ -52,7 +72,9 @@ const deleteGallery = async (req, res) => {
     res.json({
       message: "Deleted successfully"
     });
+
   } catch (error) {
+
     res.status(500).json({
       error: error.message
     });
