@@ -9,7 +9,7 @@ const addFeatured =
       const newImageUrls =
         req.files.map(
           (file) =>
-            `http://localhost:5000/uploads/images/${file.filename}`
+            `https://korniza-backend.onrender.com/uploads/images/${file.filename}`
         );
 
       /* CHECK EXISTING DATA */
