@@ -1,18 +1,32 @@
 const Featured =
   require("../models/Featured");
 
+/* ================= ADD FEATURED ================= */
+
 const addFeatured =
   async (req, res) => {
-    try {
-      /* NEW IMAGE URLS */
 
-      const newImageUrls =
+    try {
+
+      /* CREATE NEW ITEMS */
+
+      const newItems =
         req.files.map(
-          (file) =>
-            `https://korniza-backend.onrender.com/uploads/images/${file.filename}`
+          (
+            file,
+            index
+          ) => ({
+
+            title:
+              req.body.titles[index],
+
+            image:
+              `https://korniza-backend.onrender.com/uploads/images/${file.filename}`
+
+          })
         );
 
-      /* CHECK EXISTING DATA */
+      /* CHECK EXISTING */
 
       let existingFeatured =
         await Featured.findOne();
@@ -20,96 +34,133 @@ const addFeatured =
       if (
         existingFeatured
       ) {
-        /* KEEP OLD IMAGES */
 
-        let updatedImages =
+        /* MERGE OLD + NEW */
+
+        let updatedFeatured =
           [
-            ...existingFeatured.images,
-            ...newImageUrls
+            ...existingFeatured.featured,
+            ...newItems
           ];
 
         /* KEEP ONLY LATEST 5 */
 
         if (
-          updatedImages.length >
+          updatedFeatured.length >
           5
         ) {
-          updatedImages =
-            updatedImages.slice(
+
+          updatedFeatured =
+            updatedFeatured.slice(
               -5
             );
         }
 
         /* UPDATE */
 
-        existingFeatured.title =
-          req.body.title;
-
-        existingFeatured.images =
-          updatedImages;
+        existingFeatured.featured =
+          updatedFeatured;
 
         await existingFeatured.save();
 
         return res.json({
+
+          success: true,
+
           message:
             "Featured updated successfully",
 
-          data: existingFeatured
+          data:
+            existingFeatured
+
         });
       }
 
-      /* CREATE NEW */
+      /* CREATE NEW DOCUMENT */
 
       const data =
         new Featured({
-          title:
-            req.body.title,
 
-          images:
-            newImageUrls
+          featured:
+            newItems
+
         });
 
       await data.save();
 
       res.json({
+
+        success: true,
+
         message:
           "Featured added successfully",
 
         data
+
       });
+
     } catch (error) {
+
       res.status(500).json({
+
+        success: false,
+
         error:
           error.message
+
       });
     }
   };
 
+/* ================= GET FEATURED ================= */
+
 const getFeatured =
   async (req, res) => {
+
     try {
+
       const data =
         await Featured.findOne();
 
       if (!data) {
+
         return res.json({
+
+          success: true,
+
           message:
             "No featured data found",
 
-          images: []
+          featured: []
+
         });
       }
 
-      res.json(data);
+      res.json({
+
+        success: true,
+
+        featured:
+          data.featured
+
+      });
+
     } catch (error) {
+
       res.status(500).json({
+
+        success: false,
+
         error:
           error.message
+
       });
     }
   };
 
 module.exports = {
+
   addFeatured,
   getFeatured
+
 };
