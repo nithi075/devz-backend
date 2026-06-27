@@ -1,66 +1,48 @@
 const Gallery = require("../models/Gallery");
+const cloudinary = require("../config/cloudinary");
 
 const addGallery = async (req, res) => {
   try {
-    console.log(req.body);
-    console.log(req.file);
-
     if (!req.file) {
-      return res.status(400).json({
-        message: "Image file is required"
-      });
+      return res.status(400).json({ message: "Image required" });
     }
 
-    const data = new Gallery({
+    const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+
+    const uploadResult = await cloudinary.uploader.upload(base64, {
+      folder: "gallery",
+    });
+
+    const gallery = await Gallery.create({
       title: req.body.title,
       category: req.body.category,
-      imageUrl: `https://korniza-backend.onrender.com/uploads/images/${req.file.filename}`
+      imageUrl: uploadResult.secure_url,
     });
 
-    await data.save();
+    res.status(201).json({ success: true, data: gallery });
 
-    res.status(201).json({
-      message:
-        "Gallery uploaded successfully",
-      data
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      error: error.message
-    });
+  } catch (err) {
+    console.error("Gallery Error:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
 const getGallery = async (req, res) => {
   try {
-    const data = await Gallery.find();
+    const data = await Gallery.find().sort({ _id: -1 });
     res.json(data);
-  } catch (error) {
-    res.status(500).json({
-      error: error.message
-    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
 const deleteGallery = async (req, res) => {
   try {
-    await Gallery.findByIdAndDelete(
-      req.params.id
-    );
-
-    res.json({
-      message: "Deleted successfully"
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: error.message
-    });
+    await Gallery.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-module.exports = {
-  addGallery,
-  getGallery,
-  deleteGallery
-};
+module.exports = { addGallery, getGallery, deleteGallery };

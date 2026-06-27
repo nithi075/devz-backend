@@ -1,87 +1,50 @@
 const Testimonial = require("../models/Testimonial");
+const cloudinary = require("../config/cloudinary");
 
-// Add testimonial
-exports.addTestimonial = async (
-  req,
-  res
-) => {
+const addTestimonial = async (req, res) => {
   try {
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Image is required"
-        });
-    }
+    let imageUrl = "";
 
-    const data =
-      new Testimonial({
-        clientName:
-          req.body
-            .clientName,
-        review:
-          req.body.review,
-        imageUrl: `https://korniza-backend.onrender.com/uploads/images/${req.file.filename}`
+    if (req.file) {
+      const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+
+      const uploadResult = await cloudinary.uploader.upload(base64, {
+        folder: "testimonials",
       });
 
-    await data.save();
+      imageUrl = uploadResult.secure_url;
+    }
 
-    res.status(201).json({
-      message:
-        "Testimonial uploaded successfully",
-      data
+    const testimonial = await Testimonial.create({
+      clientName: req.body.clientName,
+      review: req.body.review,
+      imageUrl,
     });
-  } catch (error) {
-    console.log(
-      error
-    );
 
-    res.status(500).json({
-      error:
-        error.message
-    });
+    res.status(201).json({ success: true, data: testimonial });
+
+  } catch (err) {
+    console.error("Testimonial Error:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 
-// Get all testimonials
-exports.getTestimonial =
-  async (
-    req,
-    res
-  ) => {
-    try {
-      const data =
-        await Testimonial.find();
+const getTestimonials = async (req, res) => {
+  try {
+    const data = await Testimonial.find().sort({ _id: -1 });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-      res.json(data);
-    } catch (error) {
-      res.status(500).json({
-        error:
-          error.message
-      });
-    }
-  };
+const deleteTestimonial = async (req, res) => {
+  try {
+    await Testimonial.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-// Delete testimonial
-exports.deleteTestimonial =
-  async (
-    req,
-    res
-  ) => {
-    try {
-      await Testimonial.findByIdAndDelete(
-        req.params.id
-      );
-
-      res.json({
-        message:
-          "Deleted Successfully"
-      });
-    } catch (error) {
-      res.status(500).json({
-        error:
-          error.message
-      });
-    }
-  };
+module.exports = { addTestimonial, getTestimonials, deleteTestimonial };

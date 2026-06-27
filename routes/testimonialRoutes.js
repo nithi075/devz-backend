@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/upload");
-const controller = require("../controllers/testimonialController");
+const { addTestimonial, getTestimonials, deleteTestimonial } = require("../controllers/testimonialController");
 
-router.post("/add", upload.single("image"), controller.addTestimonial);
-router.get("/all", controller.getTestimonial);
-router.delete("/:id", controller.deleteTestimonial);
+router.post("/add", upload.single("image"), addTestimonial);
+router.get("/", getTestimonials);
+router.delete("/:id", deleteTestimonial);
 
 module.exports = router;

@@ -1,71 +1,80 @@
 const Featured =
   require("../models/Featured");
 
-/* ================= ADD FEATURED ================= */
+/* =========================================
+   ADD FEATURED
+========================================= */
 
 const addFeatured =
   async (req, res) => {
 
     try {
 
-      /* CREATE NEW ITEMS */
+      /* IMAGE URLS */
+
+      const imageUrls =
+        req.files.map(
+          (file) =>
+            `https://korniza-backend.onrender.com/uploads/images/${file.filename}`
+        );
+
+      /* CREATE ITEMS ARRAY */
 
       const newItems =
-        req.files.map(
-          (
-            file,
-            index
-          ) => ({
-
+        imageUrls.map(
+          (url, index) => ({
             title:
-              req.body.titles[index],
+              req.body.itemTitles?.[index] ||
+              "",
 
             image:
-              `https://korniza-backend.onrender.com/uploads/images/${file.filename}`
+              url,
 
+            category:
+              req.body.categories?.[index] ||
+              ""
           })
         );
 
-      /* CHECK EXISTING */
+      /* FIND EXISTING */
 
       let existingFeatured =
         await Featured.findOne();
 
-      if (
-        existingFeatured
-      ) {
+      /* =========================================
+         UPDATE EXISTING
+      ========================================= */
 
-        /* MERGE OLD + NEW */
+      if (existingFeatured) {
 
-        let updatedFeatured =
-          [
-            ...existingFeatured.featured,
-            ...newItems
-          ];
+        let updatedItems = [
+
+          ...existingFeatured.items,
+
+          ...newItems
+
+        ];
 
         /* KEEP ONLY LATEST 5 */
 
         if (
-          updatedFeatured.length >
-          5
+          updatedItems.length > 5
         ) {
 
-          updatedFeatured =
-            updatedFeatured.slice(
-              -5
-            );
+          updatedItems =
+            updatedItems.slice(-5);
+
         }
 
-        /* UPDATE */
+        existingFeatured.title =
+          req.body.title;
 
-        existingFeatured.featured =
-          updatedFeatured;
+        existingFeatured.items =
+          updatedItems;
 
         await existingFeatured.save();
 
         return res.json({
-
-          success: true,
 
           message:
             "Featured updated successfully",
@@ -74,14 +83,20 @@ const addFeatured =
             existingFeatured
 
         });
+
       }
 
-      /* CREATE NEW DOCUMENT */
+      /* =========================================
+         CREATE NEW
+      ========================================= */
 
       const data =
         new Featured({
 
-          featured:
+          title:
+            req.body.title,
+
+          items:
             newItems
 
         });
@@ -89,8 +104,6 @@ const addFeatured =
       await data.save();
 
       res.json({
-
-        success: true,
 
         message:
           "Featured added successfully",
@@ -103,16 +116,18 @@ const addFeatured =
 
       res.status(500).json({
 
-        success: false,
-
         error:
           error.message
 
       });
+
     }
+
   };
 
-/* ================= GET FEATURED ================= */
+/* =========================================
+   GET FEATURED
+========================================= */
 
 const getFeatured =
   async (req, res) => {
@@ -126,41 +141,34 @@ const getFeatured =
 
         return res.json({
 
-          success: true,
-
           message:
             "No featured data found",
 
-          featured: []
+          items: []
 
         });
+
       }
 
-      res.json({
-
-        success: true,
-
-        featured:
-          data.featured
-
-      });
+      res.json(data);
 
     } catch (error) {
 
       res.status(500).json({
 
-        success: false,
-
         error:
           error.message
 
       });
+
     }
+
   };
 
 module.exports = {
 
   addFeatured,
+
   getFeatured
 
 };
