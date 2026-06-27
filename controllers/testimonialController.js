@@ -20,7 +20,7 @@ const addTestimonial = async (req, res) => {
       const uploadResult = await cloudinary.uploader.upload(base64, {
         folder: "testimonials",
         resource_type: "image",
-        timeout: 100000, // 60 seconds
+        timeout: 60000, // 60 seconds
       });
 
       imageUrl = uploadResult.secure_url;
@@ -46,4 +46,23 @@ const addTestimonial = async (req, res) => {
     });
   }
 };
+
+const getTestimonials = async (req, res) => {
+  try {
+    const data = await Testimonial.find().sort({ _id: -1 });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const deleteTestimonial = async (req, res) => {
+  try {
+    await Testimonial.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = { addTestimonial, getTestimonials, deleteTestimonial };
